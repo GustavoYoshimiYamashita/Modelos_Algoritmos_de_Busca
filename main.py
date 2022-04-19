@@ -33,7 +33,9 @@
 '''
 
 import pygame
+from datetime import datetime
 
+now = datetime.now()
 
 class Labirinto():
 
@@ -288,117 +290,118 @@ while jogo:
             pygame.quit()
             exit()
 
-    for x in range(tamanho_coluna):
-        for y in range(tamanho_coluna):
-            if labirinto.formato[x][y] == cl:
-                labirinto.formato[x][y] = labirinto.distancia_manhattan(x, y, 1, 10)
+    # Adicionando um delay
+    if (datetime.now() - now).seconds > 0.5:
+        now = datetime.now()
+
+        for x in range(tamanho_coluna):
+            for y in range(tamanho_coluna):
+                if labirinto.formato[x][y] == cl:
+                    labirinto.formato[x][y] = labirinto.distancia_manhattan(x, y, 1, 10)
+                else:
+                    pass
+
+        # Se o agente ainda não encontrou o objetivo, então:
+        if not (labirinto.formato[labirinto.get_linha()][labirinto.get_coluna()] == fi):
+            # Se o norte estiver livre e não for uma célula já visitada, faça:
+            if labirinto.norte_livre() and not labirinto.verifica_parentes(labirinto.get_linha() - 1,
+                                                                           labirinto.get_coluna()):
+                labirinto.adicionar_fronteira(labirinto.get_linha() - 1, labirinto.get_coluna())
+                labirinto.adicionar_parentes(labirinto.get_linha(), labirinto.get_coluna())
+
+            if labirinto.sul_livre() and not labirinto.verifica_parentes(labirinto.get_linha() + 1, labirinto.get_coluna()):
+                # Se o sul estiver livre e não for uma célula já visitada, faça:
+                labirinto.adicionar_fronteira(labirinto.get_linha() + 1, labirinto.get_coluna())
+                labirinto.adicionar_parentes(labirinto.get_linha(), labirinto.get_coluna())
+
+            if labirinto.leste_livre() and not labirinto.verifica_parentes(labirinto.get_linha(),
+                                                                           labirinto.get_coluna() + 1):
+                # Se o leste estiver livre e não for uma célula já visitada, faça:
+                labirinto.adicionar_fronteira(labirinto.get_linha(), labirinto.get_coluna() + 1)
+                labirinto.adicionar_parentes(labirinto.get_linha(), labirinto.get_coluna())
+
+            if labirinto.oeste_livre() and not labirinto.verifica_parentes(labirinto.get_linha(),
+                                                                           labirinto.get_coluna() - 1):
+                # Se o oeste estiver livre e não for uma célula já visitada, faça:
+                labirinto.adicionar_fronteira(labirinto.get_linha(), labirinto.get_coluna() - 1)
+                labirinto.adicionar_parentes(labirinto.get_linha(), labirinto.get_coluna())
+
+            valor = []
+            valor_com_passos = []
+
+            for x in range(len(labirinto.fronteira)):
+                valor.append(labirinto.formato[labirinto.fronteira[x][0]][labirinto.fronteira[x][1]])
+                valor_com_passos.append(
+                    labirinto.valor_com_passos(labirinto.fronteira[x][0], labirinto.fronteira[x][1], passos))
+
+            menor_valor = labirinto.menor_valor(valor)
+            posicao_menor_valor = labirinto.posicao_menor_valor(valor, menor_valor)
+            menor_valor_passos = labirinto.menor_valor(valor_com_passos)
+            posicao_menor_valor_passos = labirinto.posicao_menor_valor(valor_com_passos, menor_valor_passos)
+
+            print("fronteira: ", fronteira)
+            print("parentes: ", parentes)
+            print("passo atual: ", passos)
+            print("valor: ", valor)
+            print("menor valor: ", menor_valor)
+            print("posicao menor valor: ", posicao_menor_valor)
+            print("valor com passos: ", valor_com_passos)
+            print("menor valor com passos: ", menor_valor_passos)
+            print("posicao menor valor e passos: ", posicao_menor_valor_passos)
+            print(labirinto)
+
+            if labirinto.algoritmo == "bfs":
+                # Movendo o agente para a nova célula
+                labirinto.mover_agente(labirinto.get_fronteira(0, 0), labirinto.get_fronteira(0, 1))
+                passos += 1
+                # Removendo a primeira célula da fronteira
+                labirinto.remover_fronteira(labirinto.get_fronteira(0, 0), labirinto.get_fronteira(0, 1))
+            elif labirinto.algoritmo == "dfs":
+                # Movendo o agente para a nova célula
+                labirinto.mover_agente(labirinto.get_fronteira(-1, 0), labirinto.get_fronteira(-1, 1))
+                passos += 1
+                # Removendo a última célula da fronteira
+                labirinto.fronteira.pop()
+            elif labirinto.algoritmo == "gbfs":
+                # Movendo o agente para a nova célula
+                labirinto.mover_agente(labirinto.get_fronteira(posicao_menor_valor, 0),
+                                       labirinto.get_fronteira(posicao_menor_valor, 1))
+                passos += 1
+                # Removendo todas as células da fronteira
+                labirinto.reseta_fronteira()
+            elif labirinto.algoritmo == "a*":
+                # Movendo o agente para a nova célula
+                labirinto.mover_agente(labirinto.get_fronteira(posicao_menor_valor_passos, 0),
+                                       labirinto.get_fronteira(posicao_menor_valor_passos, 1))
+                passos += 1
+                # Removendo a célula com o menor valor
+                labirinto.remover_fronteira(labirinto.get_fronteira(posicao_menor_valor_passos, 0),
+                                            labirinto.get_fronteira(posicao_menor_valor_passos, 1))
             else:
-                pass
+                raise ValueError("O algoritmo selecionado não está cadastrado!")
 
-    # Se o agente ainda não encontrou o objetivo, então:
-    if not (labirinto.formato[labirinto.get_linha()][labirinto.get_coluna()] == fi):
-        # Se o norte estiver livre e não for uma célula já visitada, faça:
-        if labirinto.norte_livre() and not labirinto.verifica_parentes(labirinto.get_linha() - 1,
-                                                                       labirinto.get_coluna()):
-            labirinto.adicionar_fronteira(labirinto.get_linha() - 1, labirinto.get_coluna())
-            labirinto.adicionar_parentes(labirinto.get_linha(), labirinto.get_coluna())
+            # Desenhando o agente
+            pygame.draw.rect(surface, blue, pygame.Rect(labirinto.get_coluna() * 50, labirinto.get_linha() * 50, 50, 50))
+            # Atualizando a tela do pygame
+            pygame.display.flip()
 
-        if labirinto.sul_livre() and not labirinto.verifica_parentes(labirinto.get_linha() + 1, labirinto.get_coluna()):
-            # Se o sul estiver livre e não for uma célula já visitada, faça:
-            labirinto.adicionar_fronteira(labirinto.get_linha() + 1, labirinto.get_coluna())
-            labirinto.adicionar_parentes(labirinto.get_linha(), labirinto.get_coluna())
+            '''
+            
+            Esse 'for in range' faz o papel de um delay(), justamente para deixar lente o programa, facilitando a visualização
+            do agente se movimentando pelo labirinto, essa parte pode ser retirada se quiser.
+             
+            '''
 
-        if labirinto.leste_livre() and not labirinto.verifica_parentes(labirinto.get_linha(),
-                                                                       labirinto.get_coluna() + 1):
-            # Se o leste estiver livre e não for uma célula já visitada, faça:
-            labirinto.adicionar_fronteira(labirinto.get_linha(), labirinto.get_coluna() + 1)
-            labirinto.adicionar_parentes(labirinto.get_linha(), labirinto.get_coluna())
 
-        if labirinto.oeste_livre() and not labirinto.verifica_parentes(labirinto.get_linha(),
-                                                                       labirinto.get_coluna() - 1):
-            # Se o oeste estiver livre e não for uma célula já visitada, faça:
-            labirinto.adicionar_fronteira(labirinto.get_linha(), labirinto.get_coluna() - 1)
-            labirinto.adicionar_parentes(labirinto.get_linha(), labirinto.get_coluna())
+            if labirinto.preencher:
+                pygame.draw.rect(surface, blue, pygame.Rect(labirinto.get_coluna() * 50, labirinto.get_linha() * 50, 50, 50))
+            else:
+                pygame.draw.rect(surface, black,
+                                     pygame.Rect(labirinto.get_coluna() * 50, labirinto.get_linha() * 50, 50, 50))
+                pygame.draw.rect(surface, red, pygame.Rect(labirinto.get_coluna() * 50, labirinto.get_linha() * 50, 50, 50, ), 1)
 
-        valor = []
-        valor_com_passos = []
-
-        for x in range(len(labirinto.fronteira)):
-            valor.append(labirinto.formato[labirinto.fronteira[x][0]][labirinto.fronteira[x][1]])
-            valor_com_passos.append(
-                labirinto.valor_com_passos(labirinto.fronteira[x][0], labirinto.fronteira[x][1], passos))
-
-        menor_valor = labirinto.menor_valor(valor)
-        posicao_menor_valor = labirinto.posicao_menor_valor(valor, menor_valor)
-        menor_valor_passos = labirinto.menor_valor(valor_com_passos)
-        posicao_menor_valor_passos = labirinto.posicao_menor_valor(valor_com_passos, menor_valor_passos)
-
-        print("fronteira: ", fronteira)
-        print("parentes: ", parentes)
-        print("passo atual: ", passos)
-        print("valor: ", valor)
-        print("menor valor: ", menor_valor)
-        print("posicao menor valor: ", posicao_menor_valor)
-        print("valor com passos: ", valor_com_passos)
-        print("menor valor com passos: ", menor_valor_passos)
-        print("posicao menor valor e passos: ", posicao_menor_valor_passos)
-        print(labirinto)
-
-        if labirinto.algoritmo == "bfs":
-            # Movendo o agente para a nova célula
-            labirinto.mover_agente(labirinto.get_fronteira(0, 0), labirinto.get_fronteira(0, 1))
-            passos += 1
-            # Removendo a primeira célula da fronteira
-            labirinto.remover_fronteira(labirinto.get_fronteira(0, 0), labirinto.get_fronteira(0, 1))
-        elif labirinto.algoritmo == "dfs":
-            # Movendo o agente para a nova célula
-            labirinto.mover_agente(labirinto.get_fronteira(-1, 0), labirinto.get_fronteira(-1, 1))
-            passos += 1
-            # Removendo a última célula da fronteira
-            labirinto.fronteira.pop()
-        elif labirinto.algoritmo == "gbfs":
-            # Movendo o agente para a nova célula
-            labirinto.mover_agente(labirinto.get_fronteira(posicao_menor_valor, 0),
-                                   labirinto.get_fronteira(posicao_menor_valor, 1))
-            passos += 1
-            # Removendo todas as células da fronteira
-            labirinto.reseta_fronteira()
-        elif labirinto.algoritmo == "a*":
-            # Movendo o agente para a nova célula
-            labirinto.mover_agente(labirinto.get_fronteira(posicao_menor_valor_passos, 0),
-                                   labirinto.get_fronteira(posicao_menor_valor_passos, 1))
-            passos += 1
-            # Removendo a célula com o menor valor
-            labirinto.remover_fronteira(labirinto.get_fronteira(posicao_menor_valor_passos, 0),
-                                        labirinto.get_fronteira(posicao_menor_valor_passos, 1))
+        # Finaliza o jogo
         else:
-            raise ValueError("O algoritmo selecionado não está cadastrado!")
+            jogo = False
 
-        # Desenhando o agente
-        pygame.draw.rect(surface, blue, pygame.Rect(labirinto.get_coluna() * 50, labirinto.get_linha() * 50, 50, 50))
-        # Atualizando a tela do pygame
-        pygame.display.flip()
-
-        '''
-        
-        Esse 'for in range' faz o papel de um delay(), justamente para deixar lente o programa, facilitando a visualização
-        do agente se movimentando pelo labirinto, essa parte pode ser retirada se quiser.
-         
-        '''
-        for i in range(0, 10000000):
-            pass
-
-        if labirinto.preencher:
-            pygame.draw.rect(surface, blue,
-                             pygame.Rect(labirinto.get_coluna() * 50, labirinto.get_linha() * 50, 50, 50))
-        else:
-            pygame.draw.rect(surface, black,
-                             pygame.Rect(labirinto.get_coluna() * 50, labirinto.get_linha() * 50, 50, 50))
-            pygame.draw.rect(surface, red,
-                             pygame.Rect(labirinto.get_coluna() * 50, labirinto.get_linha() * 50, 50, 50, ), 1)
-
-    # Finaliza o jogo
-    else:
-        jogo = False
-
-print("Quantidade de passos realizados: ", passos)
+    print("Quantidade de passos realizados: ", passos)
