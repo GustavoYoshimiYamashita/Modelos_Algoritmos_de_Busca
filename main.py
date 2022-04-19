@@ -379,8 +379,12 @@ while jogo:
         # Atualizando a tela do pygame
         pygame.display.flip()
 
-        # Esse 'for in range' faz o papel de um delay(), justamente para deixar lente o programa, facilitando a visualização
-        # do agente se movimentando pelo labirinto, essa parte pode ser retirada se quiser.
+        '''
+        
+        Esse 'for in range' faz o papel de um delay(), justamente para deixar lente o programa, facilitando a visualização
+        do agente se movimentando pelo labirinto, essa parte pode ser retirada se quiser.
+         
+        '''
         for i in range(0, 10000000):
             pass
 
